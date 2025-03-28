@@ -1,0 +1,35 @@
+#!/bin/sh
+if [ "$#"  -ne 2 ]; then
+    echo "usage: jpegulator <srcdir> <dstdir>"
+    exit 1
+fi
+
+if [ ! -d "$1" ]; then
+    echo "cannot find $1!"
+    exit 2
+fi
+
+if [ ! -d "$2" ]; then
+	mkdir -p "$2" 2>/dev/null
+	if [ $? -ne 0 ]; then
+		echo "Can not create directory" $2
+		exit 3
+	fi
+fi
+
+find . -type f -iregex '.*\.jpg' | while IFS= read -r file; do
+	year=$(exiv2 "$file" 2>/dev/null | grep "Image timestamp" | cut -d' ' -f4| cut -d':' -f1) 
+	
+	if [ -z "$year" ]; then
+		echo "No timestamp for ${file}" 
+		continue 
+	fi
+dest_dir=$2/$year
+mkdir -p "$dest_dir" 2>/dev/null
+
+cp "$file" "$dest_dir/"
+
+done
+echo "Source directory exists: $1"
+echo "New directory exists at :$2"
+exit 0
